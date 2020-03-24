@@ -88,6 +88,9 @@ def colors_bimod(img, layer, tcount, tfore, tgray):
                 else :
                     T = ((Tw / iw) * part + (Tb / ib) * (1.0 - part))
         thres[tt] = int(T + 0.5)
+    newval = [0] * int(tcount + 1)
+    for tt in xrange(0, int(tcount)) :
+        newval[tt] = int(255 * (tt + toffset) / (tcount + toffset + toffset - 1))
     gimp.progress_update(0.6)
     # Final loop:
     for x in xrange(0, srcWidth) :
@@ -96,14 +99,12 @@ def colors_bimod(img, layer, tcount, tfore, tgray):
             dest_pos = src_pos
             pixel = src_pixels[src_pos: src_pos + p_size]
             pval = pixel[0] + pixel[1] + pixel[2]
-            newval = 0
+            newpix = pixel
             for tt in xrange(0, int(tcount)) :
                 if (pval > thres[tt]) :
-                    newval = int(255 * (tt + toffset) / (tcount + toffset + toffset - 1))
-            newpix = pixel
-            newpix[0] = newval
-            newpix[1] = newval
-            newpix[2] = newval
+                    newpix[0] = newval[tt]
+                    newpix[1] = newval[tt]
+                    newpix[2] = newval[tt]
             dest_pixels[dest_pos : dest_pos + p_size] = newpix
     gimp.progress_update(1.0)
 
