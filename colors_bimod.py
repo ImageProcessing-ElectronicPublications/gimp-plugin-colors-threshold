@@ -18,10 +18,6 @@ def colors_bimod(img, layer, tcount, tfore, tgray):
     layername = "bimod " + layer.name
     Tmax = 768
 
-    toffset = 0
-    if tgray is True:
-        toffset = 1
-
     # Create the new layer:
     srcWidth, srcHeight = layer.width, layer.height
 
@@ -52,6 +48,8 @@ def colors_bimod(img, layer, tcount, tfore, tgray):
 
     # Histogram:
     hist = [0] * int(Tmax)
+    pmin = int(Tmax)
+    pmax = 0
     for x in xrange(0, srcWidth) :
         for y in xrange(0, srcHeight) :
             src_pos = (x + srcWidth * y) * p_size
@@ -59,6 +57,10 @@ def colors_bimod(img, layer, tcount, tfore, tgray):
             pixel = src_pixels[src_pos: src_pos + p_size]
             pval = pixel[0] + pixel[1] + pixel[2]
             hist[pval] = hist[pval] + 1
+            if pmin > pval :
+                pmin = pval
+            if pmax < pval :
+                pmax = pval
     gimp.progress_update(0.5)
     # Threshold:
     thres = [0] * int(tcount + 1)
@@ -89,8 +91,15 @@ def colors_bimod(img, layer, tcount, tfore, tgray):
                     T = ((Tw / iw) * part + (Tb / ib) * (1.0 - part))
         thres[tt] = int(T + 0.5)
     newval = [0] * int(tcount + 1)
-    for tt in xrange(0, int(tcount)) :
-        newval[tt] = int(255 * (tt + toffset) / (tcount + toffset + toffset - 1))
+    if tgray is True:
+        thres[0] = int(pmin)
+        thres[int(tcount)] = int(pmax)
+        for tt in xrange(0, int(tcount)) :
+            newval[tt] = int((thres[tt] + thres[tt + 1]) / 6)
+        thres[0] = 0
+    else :
+        for tt in xrange(0, int(tcount)) :
+            newval[tt] = int(255 * tt / (tcount - 1))
     thresval = [0] * int(Tmax)
     for t in xrange(0, Tmax) :
         for tt in xrange(0, int(tcount)) :
