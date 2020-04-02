@@ -10,6 +10,13 @@ from array import array
 
 gettext.install("gimp20-python", gimp.locale_directory, unicode=True)
 
+def byteclamp(c):
+    if (c < 0):
+        c = 0
+    elif (c > 255):
+        c = 255
+    return c
+         
 def threshold_bimod(hist, tsize, tpart):
     T = tsize * tpart
     Tn = 0
@@ -36,7 +43,7 @@ def threshold_bimod(hist, tsize, tpart):
                 T = ((Tw / iw) * tpart + (Tb / ib) * (1.0 - tpart))
     return T
 
-def colors_bimod(img, layer, tcount, tchannels, tgray):
+def colors_bimod(img, layer, tcount, tdelta, tchannels, tgray):
     gimp.progress_init("Processing" + layer.name + "...")
     pdb.gimp_undo_push_group_start(img)
     pdb.gimp_layer_add_alpha(layer)
@@ -113,9 +120,9 @@ def colors_bimod(img, layer, tcount, tchannels, tgray):
         thres_b = [-1] * int(tcount + 1)
         for tt in xrange(1, int(tcount)) :
             part = 1.0 * tt / tcount
-            thres_r[tt] = int(threshold_bimod(hist_r, Tmax, part) + 0.5)
-            thres_g[tt] = int(threshold_bimod(hist_g, Tmax, part) + 0.5)
-            thres_b[tt] = int(threshold_bimod(hist_b, Tmax, part) + 0.5)
+            thres_r[tt] = int(threshold_bimod(hist_r, Tmax, part) + 0.5 + tdelta)
+            thres_g[tt] = int(threshold_bimod(hist_g, Tmax, part) + 0.5 + tdelta)
+            thres_b[tt] = int(threshold_bimod(hist_b, Tmax, part) + 0.5 + tdelta)
         newval_r = [0] * int(tcount + 1)
         newval_g = [0] * int(tcount + 1)
         newval_b = [0] * int(tcount + 1)
@@ -127,15 +134,15 @@ def colors_bimod(img, layer, tcount, tchannels, tgray):
             thres_g[int(tcount)] = int(pmax_g)
             thres_b[int(tcount)] = int(pmax_b)
             for tt in xrange(0, int(tcount)) :
-                newval_r[tt] = int((thres_r[tt] + thres_r[tt + 1]) / 2)
-                newval_g[tt] = int((thres_g[tt] + thres_g[tt + 1]) / 2)
-                newval_b[tt] = int((thres_b[tt] + thres_b[tt + 1]) / 2)
+                newval_r[tt] = byteclamp(int((thres_r[tt] + thres_r[tt + 1]) / 2))
+                newval_g[tt] = byteclamp(int((thres_g[tt] + thres_g[tt + 1]) / 2))
+                newval_b[tt] = byteclamp(int((thres_b[tt] + thres_b[tt + 1]) / 2))
             thres_r[0] = -1
             thres_g[0] = -1
             thres_b[0] = -1
         else :
             for tt in xrange(0, int(tcount)) :
-                newval_r[tt] = int(255 * tt / (tcount - 1))
+                newval_r[tt] = byteclamp(int(255 * tt / (tcount - 1)))
                 newval_g[tt] = newval_r[tt]
                 newval_b[tt] = newval_r[tt]
         thresval_r = [0] * int(Tmax)
@@ -183,17 +190,17 @@ def colors_bimod(img, layer, tcount, tchannels, tgray):
         thres = [-1] * int(tcount + 1)
         for tt in xrange(1, int(tcount)) :
             part = 1.0 * tt / tcount
-            thres[tt] = int(threshold_bimod(hist, Tmax, part) + 0.5)
+            thres[tt] = int(threshold_bimod(hist, Tmax, part) + 0.5 + tdelta + tdelta + tdelta)
         newval = [0] * int(tcount + 1)
         if tgray is True:
             thres[0] = int(pmin)
             thres[int(tcount)] = int(pmax)
             for tt in xrange(0, int(tcount)) :
-                newval[tt] = int((thres[tt] + thres[tt + 1]) / 6)
+                newval[tt] = byteclamp(int((thres[tt] + thres[tt + 1]) / 6))
             thres[0] = -1
         else :
             for tt in xrange(0, int(tcount)) :
-                newval[tt] = int(255 * tt / (tcount - 1))
+                newval[tt] = byteclamp(int(255 * tt / (tcount - 1)))
         thresval = [0] * int(Tmax)
         for t in xrange(0, Tmax) :
             for tt in xrange(0, int(tcount)) :
@@ -227,7 +234,7 @@ def colors_bimod(img, layer, tcount, tchannels, tgray):
 
 register(
     "python-fu-colors_bimod",
-    N_("Bimodal threshold color"),
+    N_("Bimodal threshold color\n version 0.3.1\n Public Domain Mark 1.0"),
     "Adds a new layer to the image",
     "zvezdochiot",
     "zvezdochiot",
@@ -235,9 +242,10 @@ register(
     N_("_BiMod..."),
     "RGB*",
     [
-        (PF_IMAGE, "image",       "Input image", None),
+        (PF_IMAGE, "image", "Input image", None),
         (PF_DRAWABLE, "drawable", "Input drawable", None),
-        (PF_SPINNER, "tcount",    _("Count"),    2, (2, 765, 1)),
+        (PF_SPINNER, "tcount", _("Count"), 2, (2, 255, 1)),
+        (PF_SPINNER, "tdelta", _("Delta"), 0, (-255, 255, 1)),
         (PF_TOGGLE, "tchannels", "Channels", False),
         (PF_TOGGLE, "tgray", "Gray", False),
     ],
