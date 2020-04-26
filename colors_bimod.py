@@ -16,7 +16,7 @@ def byteclamp(c):
     elif (c > 255):
         c = 255
     return c
-         
+
 def threshold_bimod(hist, tsize, tpart):
     T = tsize * tpart
     Tn = 0
@@ -27,20 +27,20 @@ def threshold_bimod(hist, tsize, tpart):
         Tw = 0
         ib = 0
         iw = 0
-        for c in xrange(0, int(T)) :
+        for c in xrange(0, int(T + 0.5)) :
             Tb += hist[c] * c
             ib += hist[c]
-        for c in xrange(int(T + 1), int(tsize)) :
+        for c in xrange(int(T + 0.5), int(tsize)) :
             Tw += hist[c] * c
             iw += hist[c]
-            if ((iw + ib) == 0):
-                T = Tn
-            elif (iw == 0) :
-                T = Tb / ib
-            elif (ib == 0) :
-                T = Tw / iw
-            else :
-                T = ((Tw / iw) * tpart + (Tb / ib) * (1.0 - tpart))
+        if ((iw + ib) == 0):
+            T = Tn
+        elif (iw == 0) :
+            T = Tb / ib
+        elif (ib == 0) :
+            T = Tw / iw
+        else :
+            T = ((Tw / iw) * tpart + (Tb / ib) * (1.0 - tpart))
     return T
 
 def colors_bimod(img, layer, tcount, tdelta, tchannels, tgray):
@@ -234,7 +234,7 @@ def colors_bimod(img, layer, tcount, tdelta, tchannels, tgray):
 
 register(
     "python-fu-colors_bimod",
-    N_("Bimodal threshold color\n version 0.3.1\n Public Domain Mark 1.0"),
+    N_("Bimodal threshold color\n version 0.3.2\n Public Domain Mark 1.0"),
     "Adds a new layer to the image",
     "zvezdochiot",
     "zvezdochiot",
