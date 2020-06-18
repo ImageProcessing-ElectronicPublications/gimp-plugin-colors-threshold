@@ -43,7 +43,7 @@ def threshold_bimod(hist, tsize, tpart):
             T = ((Tw / iw) * tpart + (Tb / ib) * (1.0 - tpart))
     return T
 
-def colors_bimod(img, layer, tcount, tdelta, tchannels, tgray):
+def colors_bimod(img, layer, tcount, tdelta, tchannels, tmedian):
     gimp.progress_init("Processing" + layer.name + "...")
     pdb.gimp_undo_push_group_start(img)
     pdb.gimp_layer_add_alpha(layer)
@@ -126,7 +126,7 @@ def colors_bimod(img, layer, tcount, tdelta, tchannels, tgray):
         newval_r = [0] * int(tcount + 1)
         newval_g = [0] * int(tcount + 1)
         newval_b = [0] * int(tcount + 1)
-        if tgray is True:
+        if tmedian is True:
             thres_r[0] = int(pmin_r)
             thres_g[0] = int(pmin_g)
             thres_b[0] = int(pmin_b)
@@ -192,7 +192,7 @@ def colors_bimod(img, layer, tcount, tdelta, tchannels, tgray):
             part = 1.0 * tt / tcount
             thres[tt] = int(threshold_bimod(hist, Tmax, part) + 0.5 + tdelta + tdelta + tdelta)
         newval = [0] * int(tcount + 1)
-        if tgray is True:
+        if tmedian is True:
             thres[0] = int(pmin)
             thres[int(tcount)] = int(pmax)
             for tt in xrange(0, int(tcount)) :
@@ -234,7 +234,7 @@ def colors_bimod(img, layer, tcount, tdelta, tchannels, tgray):
 
 register(
     "python-fu-colors_bimod",
-    N_("Bimodal threshold color\n version 0.3.2\n Public Domain Mark 1.0"),
+    N_("Bimodal threshold color\n version 0.3.3\n Public Domain Mark 1.0"),
     "Adds a new layer to the image",
     "zvezdochiot",
     "zvezdochiot",
@@ -247,7 +247,7 @@ register(
         (PF_SPINNER, "tcount", _("Count"), 2, (2, 255, 1)),
         (PF_SPINNER, "tdelta", _("Delta"), 0, (-255, 255, 1)),
         (PF_TOGGLE, "tchannels", "Channels", False),
-        (PF_TOGGLE, "tgray", "Gray", False),
+        (PF_TOGGLE, "tmedian", "Median", False),
     ],
     [],
     colors_bimod,
