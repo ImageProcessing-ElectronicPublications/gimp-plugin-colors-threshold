@@ -134,9 +134,33 @@ def colors_bimod(img, layer, tcount, tdelta, tchannels, tmedian):
             thres_g[int(tcount)] = int(pmax_g)
             thres_b[int(tcount)] = int(pmax_b)
             for tt in xrange(0, int(tcount)) :
-                newval_r[tt] = byteclamp(int((thres_r[tt] + thres_r[tt + 1]) / 2))
-                newval_g[tt] = byteclamp(int((thres_g[tt] + thres_g[tt + 1]) / 2))
-                newval_b[tt] = byteclamp(int((thres_b[tt] + thres_b[tt + 1]) / 2))
+                sgti = 0
+                sgi = 0
+                for ti in xrange(thres_r[tt], thres_r[tt + 1]) :
+                    sgi = sgi + hist_r[ti]
+                    sgti = sgti + hist_r[ti] * ti
+                if sgi > 0 :
+                    newval_r[tt] = byteclamp(int(sgti / sgi + 0.5))
+                else :
+                    newval_r[tt] = byteclamp(int((thres_r[tt] + thres_r[tt + 1]) / 2))
+                sgti = 0
+                sgi = 0
+                for ti in xrange(thres_g[tt], thres_g[tt + 1]) :
+                    sgi = sgi + hist_g[ti]
+                    sgti = sgti + hist_g[ti] * ti
+                if sgi > 0 :
+                    newval_g[tt] = byteclamp(int(sgti / sgi + 0.5))
+                else :
+                    newval_g[tt] = byteclamp(int((thres_g[tt] + thres_g[tt + 1]) / 2))
+                sgti = 0
+                sgi = 0
+                for ti in xrange(thres_b[tt], thres_b[tt + 1]) :
+                    sgi = sgi + hist_b[ti]
+                    sgti = sgti + hist_b[ti] * ti
+                if sgi > 0 :
+                    newval_b[tt] = byteclamp(int(sgti / sgi + 0.5))
+                else :
+                    newval_b[tt] = byteclamp(int((thres_b[tt] + thres_b[tt + 1]) / 2))
             thres_r[0] = -1
             thres_g[0] = -1
             thres_b[0] = -1
