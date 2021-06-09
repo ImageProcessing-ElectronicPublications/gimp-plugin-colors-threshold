@@ -110,7 +110,13 @@ def colors_bimod(img, layer, tcount, tdelta, tmedian):
             for tt in xrange(0, int(tcount)) :
                 sgti = 0
                 sgi = 0
-                for ti in xrange(thres[tt], thres[tt + 1]) :
+                t0 = thres[tt]
+                if (t0 < 0):
+                    t0 = 0
+                t1 = thres[tt + 1]
+                if (t1 > Tmax):
+                    t1 = Tmax
+                for ti in xrange(t0, t1) :
                     sgi = sgi + hist[ti]
                     sgti = sgti + hist[ti] * ti
                 if sgi > 0 :
@@ -150,7 +156,7 @@ def colors_bimod(img, layer, tcount, tdelta, tmedian):
 
 register(
     "python-fu-colors_bimod",
-    N_("Bimodal threshold color\n version 0.3.5\n Public Domain Mark 1.0"),
+    N_("Bimodal threshold color\n version 0.3.6\n Public Domain Mark 1.0"),
     "Adds a new layer to the image",
     "zvezdochiot",
     "zvezdochiot",

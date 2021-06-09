@@ -94,7 +94,7 @@ def colors_quant(img, layer, red, green, blue, alpha):
 
 register(
     "python-fu-colors_quant",
-    N_("reduce colors to simulate a different palettes.\n version 0.3.5\n Public Domain Mark 1.0\n\n2bit = 4 colors\n3bit = 8 colors\n4bit = 16 colors\n5bit = 32 colors\n8bit = 256 colors"),
+    N_("reduce colors to simulate a different palettes.\n version 0.3.6\n Public Domain Mark 1.0\n\n2bit = 4 colors\n3bit = 8 colors\n4bit = 16 colors\n5bit = 32 colors\n8bit = 256 colors"),
     "Adds a new layer to the image",
     "William Bell",
     "William Bell",

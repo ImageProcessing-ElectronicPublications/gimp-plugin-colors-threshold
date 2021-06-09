@@ -193,7 +193,7 @@ def colors_dith(img, layer, tcount, tdelta, kpg):
 
 register(
     "python-fu-colors_dith",
-    N_("Dither color\n version 0.3.5\n Public Domain Mark 1.0\n(Knuth D.E. dither matrix)"),
+    N_("Dither color\n version 0.3.6\n Public Domain Mark 1.0\n(Knuth D.E. dither matrix)"),
     "Adds a new layer to the image",
     "zvezdochiot",
     "zvezdochiot",
