@@ -1,0 +1,42 @@
+2022-12-24  zvezdochiot  <mykaralw@yandex.ru>
+
+	* ru.po: Added Russian translation.
+
+2003-11-29  Sven Neumann  <sven@gimp.org>
+
+	* POTFILES.in: added src/render.c
+	* README.translators: Added explanation that this module should
+	* Makefile.in.in: added
+	* de.po: converted to UTF-8.
+
+2001-12-26  Pablo Saratxaga  <pablo@mandrakesoft.com>
+
+	* az.po: Updated Azeri file
+
+2001-12-21  Stanislav Visnovsky  <visnovsky@nenya.ms.mff.cuni.cz>
+
+	* sk.po: Added Slovak translation from Zdenko Podobny
+	<zdpo@mailbox.sk>.
+
+2001-11-09  Christian Rose  <menthos@menthos.com>
+
+	* sv.po: Added Swedish translation.
+
+2001-11-05  Abel Cheung  <maddog@linux.org.hk>
+
+	* zh_TW.po: Updated traditional Chinese translation.
+
+2001-10-20  Christophe Merlet  <redfox@eikonex.org>
+
+	* fr.po: Aded French translation from work of
+	Xavier Delatour <xdelatour@libertysurf.fr>.
+
+2001-08-31  Abel Cheung  <maddog@linux.org.hk>
+
+	* zh_TW.po: This.
+	* zh_TW.Big5.po: New traditional Chinese translation.
+
+2000-05-24  Michael Natterer  <mitch@gimp.org>
+
+	* de.po: Added German translation.
+	* initial revision.
