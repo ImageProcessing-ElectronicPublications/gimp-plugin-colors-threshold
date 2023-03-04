@@ -12,6 +12,9 @@ Include 3 filters:
 * Color quant (`== pattern 0`)
 * Color bimodal threshold (`== pattern 1`)
 * Color dith (Knuth D.E. dither matrix) (`== pattern 2,3,4`)
+* Color odith 8x8 (Knuth D.E. dither matrix) (`== pattern 5`)
+* Color dots dither 8x8 (`== pattern 6`)
+* Color bayer dither 8x8 (`== pattern 7`)
 
 ## Color quant
 

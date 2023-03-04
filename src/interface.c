@@ -103,7 +103,7 @@ dialog (gint32              image_ID,
 
     adj = gimp_scale_entry_new (GTK_TABLE (table), 0, row++,
                                 _("Pattern:"), SCALE_WIDTH, SPIN_BUTTON_WIDTH,
-                                vals->pattern, 0, 4, 1, 10, 0,
+                                vals->pattern, 0, 7, 1, 3, 0,
                                 TRUE, 0, 0,
                                 _("Pattern"), NULL);
     g_signal_connect (adj, "value_changed",

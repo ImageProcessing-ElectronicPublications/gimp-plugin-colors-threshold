@@ -39,6 +39,7 @@ static gint ImageQuant (guchar* src, guchar* dst, guint width, guint height, gui
 {
     guint y, x, k, im;
 
+	tcount--;
     k = ch;
     for (y = 0; y < height; y++ )
     {
@@ -256,7 +257,6 @@ guint ImageTDith (guchar* src, guchar* dst, guint width, guint height, guint cha
                 ix = ix0 + i;
                 tx = (iy < height && ix < width) ? src[(iy * width + ix) * channels + ch] : 255;
                 tx += delta;
-                tx += delta;
                 tx -= imm;
                 tx *= kpg;
                 tx += imm;
@@ -288,6 +288,183 @@ guint ImageTDith (guchar* src, guchar* dst, guint width, guint height, guint cha
     }
     threshold /= whg;
     threshold /= wwn;
+
+    return threshold;
+}
+
+guint ImageTDithO (guchar* src, guchar* dst, guint width, guint height, guint channels, gint kpg, gint delta, guint ch)
+{
+    guint x, y, i, j, k, l, lmin = 0;
+    guint whg, wwn, iy0, ix0, iy, ix, tt;
+    guint herrmin, wwidth = 8, ww, kw;
+    guint val;
+    gint tx, imm, threshold = 0;
+    // Knuth D.E. dither matrix
+    gint odith[64] = { 35, 48, 40, 32, 28, 15, 23, 31, 43, 59, 56, 52, 20,  4,  7, 11, 51, 62, 60, 44, 12,  1,  3, 19, 38, 46, 54, 36, 25, 17,  9, 27, 29, 14, 22, 30, 34, 49, 41, 33, 21,  5,  6, 10, 42, 58, 57, 53, 13,  0,  2, 18, 50, 63, 61, 45, 24, 16,  8, 26, 39, 47, 55, 37};
+    gint odithy[65], odithx[65];
+    gint herr, herrp, herrg;
+    
+    ww = wwidth * wwidth;
+    kw = 256 / ww;
+    k = 0;
+    for (y = 0; y < wwidth; y++)
+    {
+        for (x = 0; x < wwidth; x++)
+        {
+            l = odith[k] + 1;
+            odithy[l] = y;
+            odithx[l] = x;
+            k++;
+        }
+    }
+    whg = (height + wwidth - 1) / wwidth;
+    wwn = (width + wwidth - 1) / wwidth;
+    for (y = 0; y < whg; y++)
+    {
+        iy0 = y * wwidth;
+        for (x = 0; x < wwn; x++)
+        {
+            ix0 = x * wwidth;
+            imm = 0;
+            for (l = 1; l < (ww + 1); l++)
+            {
+                j = odithy[l];
+                i = odithx[l];
+                iy = iy0 + j;
+                ix = ix0 + i;
+                tx = (iy < height && ix < width) ? src[(iy * width + ix) * channels + ch] : 255;
+                tx += delta;
+                imm += tx;
+            }
+            imm /= ww;
+            herrp = herrg = 0;
+            for (l = 1; l < (ww + 1); l++)
+            {
+                j = odithy[l];
+                i = odithx[l];
+                iy = iy0 + j;
+                ix = ix0 + i;
+                tx = (iy < height && ix < width) ? src[(iy * width + ix) * channels + ch] : 255;
+                tx += delta;
+                herrg += (255 - tx);
+                tx -= imm;
+                tx *= kpg;
+                tx += imm;
+                herrp += (255 - tx);
+            }
+            herrmin = herrp + herrg;
+            lmin = 0;
+            for (l = 1; l < (ww + 1); l++)
+            {
+                j = odithy[l];
+                i = odithx[l];
+                iy = iy0 + j;
+                ix = ix0 + i;
+                tx = (iy < height && ix < width) ? src[(iy * width + ix) * channels + ch] : 255;
+                tx += delta;
+                tx -= imm;
+                tx *= kpg;
+                tx += imm;
+                herrp += (tx + tx - 255);
+                herrg -= 255;
+                herr = (herrp < 0) ? (-herrp) : herrp;
+                herr += (herrg < 0) ? (-herrg) : herrg;
+                if (herr < herrmin)
+                {
+                    herrmin = herr;
+                    lmin = l;
+                }
+            }
+            for (l = 1; l < (ww + 1); l++)
+            {
+                j = odithy[l];
+                i = odithx[l];
+                iy = iy0 + j;
+                ix = ix0 + i;
+                if (iy < height && ix < width)
+                {
+                    val = ((l > lmin) ? 255 : 0 );
+                    dst[(iy * width + ix) * channels + ch] = val;
+                }
+            }
+            tt = kw * (ww - lmin);
+            threshold += tt;
+        }
+    }
+    threshold /= whg;
+    threshold /= wwn;
+
+    return threshold;
+}
+
+guint ImageTDithDots (guchar* src, guchar* dst, guint width, guint height, guint channels, gint delta, guint ch)
+{
+    guint y, x, yb, xb, k;
+    guint wwidth = 8;
+    gint thres, pix;
+    gint threshold = 127;
+    // Dots dither matrix
+    gint ddith[64] = {13,  9,  5, 12, 18, 22, 26, 19,  6,  1,  0,  8, 25, 30, 31, 23, 10,  2,  3,  4, 21, 29, 28, 27, 14,  7, 11, 15, 17, 24, 20, 16, 18, 22, 26, 19, 13,  9,  5, 12, 25, 30, 31, 23,  6,  1,  0,  8, 21, 29, 28, 27, 10,  2,  3,  4, 17, 24, 20, 16, 14,  7, 11, 15};
+
+    k = 0;
+    for (y = 0; y < wwidth; y++)
+    {
+        for (x = 0; x < wwidth; x++)
+        {
+            ddith[k] *= 8;
+            k++;
+        }
+    }
+    k = ch;
+    for (y = 0; y < height; y++)
+    {
+        yb = y % wwidth;
+        for (x = 0; x < width; x++)
+        {
+            xb = x % wwidth;
+            thres = ddith[yb * wwidth + xb];
+            pix = src[k];
+            pix += delta;
+            dst[k] = ((pix < thres) ? 0 : 255);
+            k += channels;
+        }
+    }
+
+    return threshold;
+}
+
+guint ImageTDithBayer (guchar* src, guchar* dst, guint width, guint height, guint channels, gint delta, guint ch)
+{
+    guint y, x, yb, xb, k;
+    guint wwidth = 8;
+    gint thres, pix;
+    gint threshold = 127;
+    // Bayer dither matrix
+    gint bdith[64] = { 0, 32,  8, 40,  2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44,  4, 36, 14, 46,  6, 38, 60, 28, 52, 20, 62, 30, 54, 22,  3, 35, 11, 43,  1, 33,  9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47,  7, 39, 13, 45,  5, 37, 63, 31, 55, 23, 61, 29, 53, 21};
+
+    k = 0;
+    for (y = 0; y < wwidth; y++)
+    {
+        for (x = 0; x < wwidth; x++)
+        {
+            bdith[k] *= 4;
+            k++;
+        }
+    }
+    k = ch;
+    for (y = 0; y < height; y++)
+    {
+        yb = y % wwidth;
+        for (x = 0; x < width; x++)
+        {
+            xb = x % wwidth;
+            thres = bdith[yb * wwidth + xb];
+            pix = src[k];
+            pix += delta;
+            dst[k] = ((pix < thres) ? 0 : 255);
+            k += channels;
+        }
+    }
 
     return threshold;
 }
@@ -367,6 +544,24 @@ void render(gint32 image_ID,
                 (void)ImageTDith (in_img_array, out_img_array, width, height, channels, tpattern, tcount, 0, d);
             }
             break;
+        case 5:
+            for (d = 0; d < channels; d++)
+            {
+                (void)ImageTDithO (in_img_array, out_img_array, width, height, channels, tcount, 0, d);
+            }
+            break;        
+        case 6:
+            for (d = 0; d < channels; d++)
+            {
+                (void)ImageTDithDots (in_img_array, out_img_array, width, height, channels, 0, d);
+            }
+            break;        
+        case 7:
+            for (d = 0; d < channels; d++)
+            {
+                (void)ImageTDithBayer (in_img_array, out_img_array, width, height, channels, 0, d);
+            }
+            break;        
         default:
             break;
     }
