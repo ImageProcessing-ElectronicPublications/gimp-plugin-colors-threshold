@@ -15,6 +15,7 @@ Include 3 filters:
 * Color odith 8x8 (Knuth D.E. dither matrix) (`== pattern 5`)
 * Color dots dither 8x8 (`== pattern 6`)
 * Color bayer dither 8x8 (`== pattern 7`)
+* Color [d-algorithm](http://csis.robodrom.net/scientific-activities/dissertations/dissertations_61.html) dither (`== pattern 8`)
 
 ## Color quant
 
