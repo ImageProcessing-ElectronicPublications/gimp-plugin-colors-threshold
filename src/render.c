@@ -39,7 +39,7 @@ static gint ImageQuant (guchar* src, guchar* dst, guint width, guint height, gui
 {
     guint y, x, k, im;
 
-	tcount--;
+    tcount--;
     k = ch;
     for (y = 0; y < height; y++ )
     {
@@ -132,7 +132,8 @@ static guint HistBiMod (guint64* histogram, guint histsize, gdouble part)
 
 static gint ImageThreshold (guchar* src, guchar* dst, guint width, guint height, guint channels, guint threshold, guint cwhite, guint ch)
 {
-    guint y, x, k, im;
+    guint y, x, im;
+    guint64 k;
 
     k = ch;
     for (y = 0; y < height; y++ )
@@ -148,7 +149,7 @@ static gint ImageThreshold (guchar* src, guchar* dst, guint width, guint height,
     return threshold;
 }
 
-guint ImageTDith (guchar* src, guchar* dst, guint width, guint height, guint channels, guint wwidth, gint kpg, gint delta, guint ch)
+static guint ImageTDith (guchar* src, guchar* dst, guint width, guint height, guint channels, guint wwidth, gint kpg, gint delta, guint ch)
 {
     guint x, y, i, j, k, l, lmin = 0;
     guint whg, wwn, iy0, ix0, iy, ix, tt;
@@ -292,7 +293,7 @@ guint ImageTDith (guchar* src, guchar* dst, guint width, guint height, guint cha
     return threshold;
 }
 
-guint ImageTDithO (guchar* src, guchar* dst, guint width, guint height, guint channels, gint kpg, gint delta, guint ch)
+static guint ImageTDithO (guchar* src, guchar* dst, guint width, guint height, guint channels, gint kpg, gint delta, guint ch)
 {
     guint x, y, i, j, k, l, lmin = 0;
     guint whg, wwn, iy0, ix0, iy, ix, tt;
@@ -303,7 +304,7 @@ guint ImageTDithO (guchar* src, guchar* dst, guint width, guint height, guint ch
     gint odith[64] = { 35, 48, 40, 32, 28, 15, 23, 31, 43, 59, 56, 52, 20,  4,  7, 11, 51, 62, 60, 44, 12,  1,  3, 19, 38, 46, 54, 36, 25, 17,  9, 27, 29, 14, 22, 30, 34, 49, 41, 33, 21,  5,  6, 10, 42, 58, 57, 53, 13,  0,  2, 18, 50, 63, 61, 45, 24, 16,  8, 26, 39, 47, 55, 37};
     gint odithy[65], odithx[65];
     gint herr, herrp, herrg;
-    
+
     ww = wwidth * wwidth;
     kw = 256 / ww;
     k = 0;
@@ -397,7 +398,7 @@ guint ImageTDithO (guchar* src, guchar* dst, guint width, guint height, guint ch
     return threshold;
 }
 
-guint ImageTDithDots (guchar* src, guchar* dst, guint width, guint height, guint channels, gint delta, guint ch)
+static guint ImageTDithDots (guchar* src, guchar* dst, guint width, guint height, guint channels, gint delta, guint ch)
 {
     guint y, x, yb, xb, k;
     guint wwidth = 8;
@@ -433,11 +434,12 @@ guint ImageTDithDots (guchar* src, guchar* dst, guint width, guint height, guint
     return threshold;
 }
 
-guint ImageTDithBayer (guchar* src, guchar* dst, guint width, guint height, guint channels, gint delta, guint ch)
+static guint ImageTDithBayer (guchar* src, guchar* dst, guint width, guint height, guint channels, gint delta, guint ch)
 {
-    guint y, x, yb, xb, k;
+    guint y, x, yb, xb;
     guint wwidth = 8;
     gint thres, pix;
+    guint64 k;
     gint threshold = 127;
     // Bayer dither matrix
     gint bdith[64] = { 0, 32,  8, 40,  2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44,  4, 36, 14, 46,  6, 38, 60, 28, 52, 20, 62, 30, 54, 22,  3, 35, 11, 43,  1, 33,  9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47,  7, 39, 13, 45,  5, 37, 63, 31, 55, 23, 61, 29, 53, 21};
@@ -465,6 +467,88 @@ guint ImageTDithBayer (guchar* src, guchar* dst, guint width, guint height, guin
             k += channels;
         }
     }
+
+    return threshold;
+}
+
+static guint ImageTDalg (guchar* src, guchar* dest, guint width, guint height, guint channels, guint tcount, gint delta, guint ch)
+{
+    guint y, x, yf, xf;
+    guint whg, wwn, y0, x0, yn, xn, tx, tt;
+    gdouble sw, swt, dsr, dst;
+    guint histsize = 256;
+    gint threshold = 127;
+    guint64 *histogram, k;
+
+    whg = (height + tcount - 1) / tcount;
+    wwn = (width + tcount - 1) / tcount;
+    histogram = g_new(guint64, histsize);
+
+    for (y = 0; y < whg; y++)
+    {
+        y0 = y * tcount;
+        yn = y0 + tcount;
+        yn = (yn < height) ? yn : height;
+        for (x = 0; x < wwn; x++)
+        {
+            x0 = x * tcount;
+            xn = x0 + tcount;
+            xn = (xn < width) ? xn : width;
+            sw = 0;
+            for (yf = y0; yf < yn; yf++)
+            {
+                for (xf = x0; xf < xn; xf++)
+                {
+                    k = (yf * width + xf) * channels + ch;
+                    tx = src[k];
+                    sw += tx;
+                }
+            }
+            tt = histsize - 1;
+            swt = 0;
+            if (sw > 0)
+            {
+                for (k = 0; k < histsize; k++)
+                {
+                    histogram[k] = 0;
+                }
+                for (yf = y0; yf < yn; yf++)
+                {
+                    for (xf = x0; xf < xn; xf++)
+                    {
+                        k = (yf * width + xf) * channels + ch;
+                        tx = src[k];
+                        histogram[tx]++;
+                    }
+                }
+                while ( swt < sw && tt > 0)
+                {
+                    dsr = sw - swt;
+                    swt += (histogram[tt] * (histsize - 1));
+                    dst = swt - sw;
+                    tt--;
+                }
+                if (dst > dsr)
+                {
+                    tt++;
+                }
+            }
+            tt += delta;
+            for (yf = y0; yf < yn; yf++)
+            {
+                for (xf = x0; xf < xn; xf++)
+                {
+                    k = (yf * width + xf) * channels + ch;
+                    tx = src[k];
+                    dest[k] = ((tx < tt) ? 0 : 255);
+                }
+            }
+            threshold += tt;
+        }
+    }
+    threshold /= whg;
+    threshold /= wwn;
+    g_free(histogram);
 
     return threshold;
 }
@@ -549,19 +633,25 @@ void render(gint32 image_ID,
             {
                 (void)ImageTDithO (in_img_array, out_img_array, width, height, channels, tcount, 0, d);
             }
-            break;        
+            break;
         case 6:
             for (d = 0; d < channels; d++)
             {
                 (void)ImageTDithDots (in_img_array, out_img_array, width, height, channels, 0, d);
             }
-            break;        
+            break;
         case 7:
             for (d = 0; d < channels; d++)
             {
                 (void)ImageTDithBayer (in_img_array, out_img_array, width, height, channels, 0, d);
             }
-            break;        
+            break;
+        case 8:
+            for (d = 0; d < channels; d++)
+            {
+                (void)ImageTDalg (in_img_array, out_img_array, width, height, channels, tcount, 0, d);
+            }
+            break;
         default:
             break;
     }
