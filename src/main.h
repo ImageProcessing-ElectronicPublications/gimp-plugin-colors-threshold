@@ -28,20 +28,24 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-typedef struct {
+typedef struct
+{
     gint      threshold;
     gint      pattern;
 } PlugInVals;
 
-typedef struct {
+typedef struct
+{
     gint32 image_id;
 } PlugInImageVals;
 
-typedef struct {
+typedef struct
+{
     gint32 drawable_id;
 } PlugInDrawableVals;
 
-typedef struct {
+typedef struct
+{
     gboolean chain_active;
 } PlugInUIVals;
 

@@ -406,13 +406,18 @@ static guint ImageTDithDots (guchar* src, guchar* dst, guint width, guint height
     gint threshold = 127;
     // Dots dither matrix
     gint ddith[64] = {13,  9,  5, 12, 18, 22, 26, 19,  6,  1,  0,  8, 25, 30, 31, 23, 10,  2,  3,  4, 21, 29, 28, 27, 14,  7, 11, 15, 17, 24, 20, 16, 18, 22, 26, 19, 13,  9,  5, 12, 25, 30, 31, 23,  6,  1,  0,  8, 21, 29, 28, 27, 10,  2,  3,  4, 17, 24, 20, 16, 14,  7, 11, 15};
+    guint histsize = 256;
+    gdouble part;
+    guint64 histogram[256] = {0};
 
+    histsize = HistCreate (src, histogram, width, height, channels, histsize, ch);
     k = 0;
     for (y = 0; y < wwidth; y++)
     {
         for (x = 0; x < wwidth; x++)
         {
-            ddith[k] *= 8;
+            part = (gdouble)ddith[k] / 32.0;
+            ddith[k] = HistBiMod (histogram, histsize, part);
             k++;
         }
     }
@@ -585,7 +590,7 @@ void render(gint32 image_ID,
     gimp_image_undo_group_start(gimp_item_get_image(drawable->drawable_id));
 
     GimpDrawable* out_drawable = gimp_drawable_get(
-        gimp_image_get_active_drawable(gimp_item_get_image(drawable->drawable_id)));
+                                     gimp_image_get_active_drawable(gimp_item_get_image(drawable->drawable_id)));
 
     GimpPixelRgn dest_rgn;
     gimp_pixel_rgn_init(&dest_rgn, out_drawable, 0, 0, width, height, TRUE, TRUE);
@@ -595,65 +600,65 @@ void render(gint32 image_ID,
 
     switch (tpattern)
     {
-        case 0:
-            for (d = 0; d < channels; d++)
+    case 0:
+        for (d = 0; d < channels; d++)
+        {
+            (void)ImageQuant (in_img_array, out_img_array, width, height, channels, tcount, d);
+        }
+        break;
+    case 1:
+        for (d = 0; d < channels; d++)
+        {
+            for (t = 0; t < tcount + 1; t++)
             {
-                (void)ImageQuant (in_img_array, out_img_array, width, height, channels, tcount, d);
+                part = (gdouble)t / tcount;
+                histsize = HistCreate (in_img_array, histogram, width, height, channels, histsize, d);
+                threshold[t] = HistBiMod (histogram, histsize, part);
             }
-            break;
-        case 1:
-            for (d = 0; d < channels; d++)
+            for (t = 0; t < tcount; t++)
             {
-                for (t = 0; t < tcount + 1; t++)
-                {
-                    part = (gdouble)t / tcount;
-                    histsize = HistCreate (in_img_array, histogram, width, height, channels, histsize, d);
-                    threshold[t] = HistBiMod (histogram, histsize, part);
-                }
-                for (t = 0; t < tcount; t++)
-                {
-                    tval[t] = (threshold[t] + threshold[t + 1]) / 2;
-                }
-                for (t = 0; t < tcount; t++)
-                {
-                    (void)ImageThreshold (in_img_array, out_img_array, width, height, channels, threshold[t], tval[t], d);
-                }
+                tval[t] = (threshold[t] + threshold[t + 1]) / 2;
             }
-            break;
-        case 2:
-        case 3:
-        case 4:
-            for (d = 0; d < channels; d++)
+            for (t = 0; t < tcount; t++)
             {
-                (void)ImageTDith (in_img_array, out_img_array, width, height, channels, tpattern, tcount, 0, d);
+                (void)ImageThreshold (in_img_array, out_img_array, width, height, channels, threshold[t], tval[t], d);
             }
-            break;
-        case 5:
-            for (d = 0; d < channels; d++)
-            {
-                (void)ImageTDithO (in_img_array, out_img_array, width, height, channels, tcount, 0, d);
-            }
-            break;
-        case 6:
-            for (d = 0; d < channels; d++)
-            {
-                (void)ImageTDithDots (in_img_array, out_img_array, width, height, channels, 0, d);
-            }
-            break;
-        case 7:
-            for (d = 0; d < channels; d++)
-            {
-                (void)ImageTDithBayer (in_img_array, out_img_array, width, height, channels, 0, d);
-            }
-            break;
-        case 8:
-            for (d = 0; d < channels; d++)
-            {
-                (void)ImageTDalg (in_img_array, out_img_array, width, height, channels, tcount, 0, d);
-            }
-            break;
-        default:
-            break;
+        }
+        break;
+    case 2:
+    case 3:
+    case 4:
+        for (d = 0; d < channels; d++)
+        {
+            (void)ImageTDith (in_img_array, out_img_array, width, height, channels, tpattern, tcount, 0, d);
+        }
+        break;
+    case 5:
+        for (d = 0; d < channels; d++)
+        {
+            (void)ImageTDithO (in_img_array, out_img_array, width, height, channels, tcount, 0, d);
+        }
+        break;
+    case 6:
+        for (d = 0; d < channels; d++)
+        {
+            (void)ImageTDithDots (in_img_array, out_img_array, width, height, channels, 0, d);
+        }
+        break;
+    case 7:
+        for (d = 0; d < channels; d++)
+        {
+            (void)ImageTDithBayer (in_img_array, out_img_array, width, height, channels, 0, d);
+        }
+        break;
+    case 8:
+        for (d = 0; d < channels; d++)
+        {
+            (void)ImageTDalg (in_img_array, out_img_array, width, height, channels, tcount, 0, d);
+        }
+        break;
+    default:
+        break;
     }
 
     gimp_pixel_rgn_set_rect(&dest_rgn, (guchar*)out_img_array, x1, y1, width, height);

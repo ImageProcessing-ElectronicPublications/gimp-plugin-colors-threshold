@@ -68,7 +68,8 @@ static PlugInImageVals image_vals;
 static PlugInDrawableVals drawable_vals;
 static PlugInUIVals ui_vals;
 
-GimpPlugInInfo PLUG_IN_INFO = {
+GimpPlugInInfo PLUG_IN_INFO =
+{
     NULL,  /* init_proc  */
     NULL,  /* quit_proc  */
     query, /* query_proc */
@@ -77,7 +78,8 @@ GimpPlugInInfo PLUG_IN_INFO = {
 
 MAIN()
 
-static void query(void) {
+static void query(void)
+{
     gchar* help_path;
     gchar* help_uri;
 
@@ -112,7 +114,8 @@ static void run(const gchar* name,
                 gint n_params,
                 const GimpParam* param,
                 gint* nreturn_vals,
-                GimpParam** return_vals) {
+                GimpParam** return_vals)
+{
     static GimpParam values[1];
     GimpDrawable* drawable;
     gint32 image_ID;
@@ -143,38 +146,40 @@ static void run(const gchar* name,
     {
         switch (run_mode)
         {
-            case GIMP_RUN_NONINTERACTIVE:
-                if (n_params != 5)
-                {
-                    status = GIMP_PDB_CALLING_ERROR;
-                }
-                else
-                {
-                    vals.pattern      = param[3].data.d_int32;
-                    vals.threshold   = param[4].data.d_int32;
-                }
-                break;
+        case GIMP_RUN_NONINTERACTIVE:
+            if (n_params != 5)
+            {
+                status = GIMP_PDB_CALLING_ERROR;
+            }
+            else
+            {
+                vals.pattern      = param[3].data.d_int32;
+                vals.threshold   = param[4].data.d_int32;
+            }
+            break;
 
-            case GIMP_RUN_INTERACTIVE:
-                /*  Possibly retrieve data  */
-                gimp_get_data(DATA_KEY_VALS, &vals);
-                gimp_get_data(DATA_KEY_UI_VALS, &ui_vals);
+        case GIMP_RUN_INTERACTIVE:
+            /*  Possibly retrieve data  */
+            gimp_get_data(DATA_KEY_VALS, &vals);
+            gimp_get_data(DATA_KEY_UI_VALS, &ui_vals);
 
-                if (!dialog(image_ID, drawable, &vals, &image_vals, &drawable_vals, &ui_vals))
-                {
-                    status = GIMP_PDB_CANCEL;
-                }
-                break;
+            if (!dialog(image_ID, drawable, &vals, &image_vals, &drawable_vals, &ui_vals))
+            {
+                status = GIMP_PDB_CANCEL;
+            }
+            break;
 
-            case GIMP_RUN_WITH_LAST_VALS:
-                /*  Possibly retrieve data  */
-                gimp_get_data(DATA_KEY_VALS, &vals);
-                break;
+        case GIMP_RUN_WITH_LAST_VALS:
+            /*  Possibly retrieve data  */
+            gimp_get_data(DATA_KEY_VALS, &vals);
+            break;
 
-            default:
-                break;
+        default:
+            break;
         }
-    } else {
+    }
+    else
+    {
         status = GIMP_PDB_CALLING_ERROR;
     }
 
