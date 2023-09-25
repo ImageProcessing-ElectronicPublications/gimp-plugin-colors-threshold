@@ -90,40 +90,28 @@ static guint HistBiMod (guint64* histogram, guint histsize, gdouble part)
     part = (part < 0.0 || part > 1.0) ? 0.5 : part;
     T = (guint)(part * (gdouble)histsize + 0.5);
     Tn = 0;
-    while ( T != Tn )
+    while (T != Tn)
     {
         Tn = T;
         Tb = Tw = ib = iw = 0;
-        for (k = 0; k < T; k++)
+        for (k = 0; k < histsize; k++)
         {
-            im = histogram[k];
-            Tb += (im * k);
-            ib += im;
+            if (k < T)
+            {
+                im = histogram[k];
+                Tb += (im * k);
+                ib += im;
+            }
+            else
+            {
+                im = histogram[k];
+                Tw += (im * k);
+                iw += im;
+            }
         }
-        for (k = T; k < histsize; k++)
-        {
-            im = histogram[k];
-            Tw += (im * k);
-            iw += im;
-        }
-        Tb /= (ib > 1) ? ib : 1;
-        Tw /= (iw > 1) ? iw : 1;
-        if (iw == 0 && ib == 0)
-        {
-            T = Tn;
-        }
-        else if (iw == 0)
-        {
-            T = (guint)Tb;
-        }
-        else if (ib == 0)
-        {
-            T = (guint)Tw;
-        }
-        else
-        {
-            T = (guint)(part * (gdouble)Tw + (1.0 - part) * (gdouble)Tb + 0.5f);
-        }
+        Tb = (ib > 0) ? (Tb / ib) : 0;
+        Tw = (iw > 0) ? (Tw / iw) : histsize;
+        T = (guint)(part * (gdouble)Tw + (1.0 - part) * (gdouble)Tb + 0.5f);
     }
     threshold = (guint)T;
 
@@ -416,7 +404,7 @@ static guint ImageTDithDots (guchar* src, guchar* dst, guint width, guint height
     {
         for (x = 0; x < wwidth; x++)
         {
-            part = (gdouble)ddith[k] / 32.0;
+            part = ((gdouble)ddith[k] + 0.5) / 32.0;
             ddith[k] = HistBiMod (histogram, histsize, part);
             k++;
         }
@@ -448,13 +436,18 @@ static guint ImageTDithBayer (guchar* src, guchar* dst, guint width, guint heigh
     gint threshold = 127;
     // Bayer dither matrix
     gint bdith[64] = { 0, 32,  8, 40,  2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44,  4, 36, 14, 46,  6, 38, 60, 28, 52, 20, 62, 30, 54, 22,  3, 35, 11, 43,  1, 33,  9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47,  7, 39, 13, 45,  5, 37, 63, 31, 55, 23, 61, 29, 53, 21};
+    guint histsize = 256;
+    gdouble part;
+    guint64 histogram[256] = {0};
 
+    histsize = HistCreate (src, histogram, width, height, channels, histsize, ch);
     k = 0;
     for (y = 0; y < wwidth; y++)
     {
         for (x = 0; x < wwidth; x++)
         {
-            bdith[k] *= 4;
+            part = ((gdouble)bdith[k] + 0.5) / 64.0;
+            bdith[k] = HistBiMod (histogram, histsize, part);
             k++;
         }
     }
