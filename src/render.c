@@ -84,11 +84,27 @@ static guint HistCreate (guchar* src, guint64* histogram, guint width, guint hei
 static guint HistBiMod (guint64* histogram, guint histsize, gdouble part)
 {
     guint k, T, Tn;
+    guint Tmin = 255, Tmax = 0, Ti;
     guint64 im, iw, ib, Tw, Tb;
     guint threshold = 0;
 
     part = (part < 0.0 || part > 1.0) ? 0.5 : part;
-    T = (guint)(part * (gdouble)histsize + 0.5);
+
+    Ti = 0;
+    while (Ti < Tmin)
+    {
+        Tmin = (histogram[Ti] > 0) ? Ti : Tmin;
+        Ti++;
+    }
+    Ti = 255;
+    while (Ti > Tmax)
+    {
+        Tmax = (histogram[Ti] > 0) ? Ti : Tmax;
+        Ti--;
+    }
+    Tmax++;
+
+    T = (guint) (part * Tmax + (1.0 - part) * Tmin + 0.5);
     Tn = 0;
     while (T != Tn)
     {
@@ -109,9 +125,9 @@ static guint HistBiMod (guint64* histogram, guint histsize, gdouble part)
                 iw += im;
             }
         }
-        Tb = (ib > 0) ? (Tb / ib) : 0;
-        Tw = (iw > 0) ? (Tw / iw) : histsize;
-        T = (guint)(part * (gdouble)Tw + (1.0 - part) * (gdouble)Tb + 0.5f);
+        Tb = (ib > 0) ? (Tb / ib) : Tmin;
+        Tw = (iw > 0) ? (Tw / iw) : Tmax;
+        T = (guint)(part * (gdouble) Tw + (1.0 - part) * (gdouble) Tb + 0.5f);
     }
     threshold = (guint)T;
 

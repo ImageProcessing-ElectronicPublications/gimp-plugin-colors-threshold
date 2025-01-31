@@ -1,3 +1,7 @@
+2025-01-31  zvezdochiot  <mykaralw@yandex.ru>
+
+    * Made 1.2.3 c-release. Correct BiModal threshold.
+
 2023-04-20  zvezdochiot  <mykaralw@yandex.ru>
 
     * Made 1.2.0 c-release. [D-algorithm](http://csis.robodrom.net/scientific-activities/dissertations/dissertations_61.html).
